@@ -58,6 +58,18 @@
         .dia-grupo.aberto .dia-conteudo { display: block; }
         .repor-true { color: #dc2626; font-weight: bold; }
         .repor-false { color: #16a34a; }
+
+        /* CSS para Impressão */
+        @media print {
+            .sidebar, header, .btn-print, button, .form-group, .dashboard-cards, .box:not(#tela-registros .box) { display: none !important; }
+            body { background: white; }
+            .main-content { margin: 0; padding: 0; width: 100%; }
+            .tela { display: none; }
+            #tela-registros { display: block !important; }
+            .dia-conteudo { display: block !important; }
+            .dia-grupo { border: 1px solid #ccc; margin-bottom: 10px; }
+            table { border: 1px solid #ccc; }
+        }
     </style>
 </head>
 <body>
@@ -332,4 +344,3 @@
     </script>
 </body>
 </html>
-oi
