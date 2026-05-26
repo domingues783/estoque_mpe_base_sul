@@ -29,7 +29,7 @@
 
         .grid-operacional { display: grid; grid-template-columns: 1fr 1.2fr; gap: 25px; }
         .box { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 25px; }
-        .box h2 { font-size: 18px; margin-bottom: 20px; color: #0f172a; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
+        .box h2 { font-size: 18px; margin-bottom: 20px; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
         
         .form-group { margin-bottom: 18px; }
         .form-group label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 600; color: #334155; }
@@ -62,14 +62,14 @@
         .repor-false { color: #16a34a; }
 
         @media print {
-            .sidebar, header, .btn-print, button, .form-group, .dashboard-cards, .box:not(#tela-registros .box):not(#tela-pedidos .box) { display: none !important; }
+            .sidebar, header, .btn-print, button, .form-group, .dashboard-cards, .box { display: none !important; }
             body { background: white; }
             .main-content { margin: 0; padding: 0; width: 100%; }
-            .tela { display: none; }
-            #tela-registros, #tela-pedidos { display: block !important; }
+            .tela.ativa { display: block !important; }
+            .tela.ativa .box { display: block !important; }
             .dia-conteudo { display: block !important; }
             .dia-grupo { border: 1px solid #ccc; margin-bottom: 10px; }
-            table { border: 1px solid #ccc; }
+            table { border: 1px solid #ccc; display: table !important; }
         }
     </style>
 </head>
@@ -173,7 +173,7 @@
             <div class="box">
                 <h2>Lista de Pedidos</h2>
                 <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                    <input type="text" id="novo-pedido" placeholder="Nome do Material..." style="padding: 8px; flex: 1; border: 1px solid #ccc; border-radius: 4px;">
+                    <input type="text" id="novo-pedido" placeholder="Nome do Material..." style="padding: 8px; flex: 1; border: 1px solid #cbd5e1; border-radius: 6px;">
                     <button onclick="adicionarPedido()" style="width: auto; background: #059669;">Adicionar</button>
                 </div>
                 <button class="btn-print" onclick="window.print()" style="width: auto;">🖨️ Imprimir Lista</button>
@@ -188,7 +188,7 @@
                     <button class="btn-print" onclick="window.print()" style="width: auto;">🖨️ Imprimir</button>
                     <button onclick="exportarParaCSV()" style="width: auto; background: #059669;">📊 Exportar para Excel</button>
                 </div>
-                <div class="form-group"><input type="text" id="filtro-busca" placeholder="🔍 Buscar por material, responsável, destino ou data..." onkeyup="filtrarRegistros()"></div>
+                <div class="form-group"><input type="text" id="filtro-busca" placeholder="🔍 Buscar..." onkeyup="filtrarRegistros()"></div>
                 <div id="container-datas"></div>
             </div>
         </div>
@@ -207,18 +207,9 @@
             <div class="box">
                 <h2>Ocorrências com Materiais</h2>
                 <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                    <div class="form-group">
-                        <label>Colaborador</label>
-                        <select id="oc-resp"></select>
-                    </div>
-                    <div class="form-group">
-                        <label>Material</label>
-                        <input type="text" id="oc-mat" placeholder="Ex: Furadeira, EPI...">
-                    </div>
-                    <div class="form-group">
-                        <label>Descrição da Ocorrência</label>
-                        <textarea id="oc-desc" placeholder="Ex: Quebrado, perdido, devolvido em mau estado..."></textarea>
-                    </div>
+                    <div class="form-group"><label>Colaborador</label><select id="oc-resp"></select></div>
+                    <div class="form-group"><label>Material</label><input type="text" id="oc-mat"></div>
+                    <div class="form-group"><label>Descrição da Ocorrência</label><textarea id="oc-desc"></textarea></div>
                     <button onclick="adicionarOcorrencia()" style="background: #d97706;">Registrar Ocorrência</button>
                 </div>
                 <table>
@@ -265,7 +256,6 @@
             if (nomeTela === 'ocorrencias') renderizarOcorrencias();
         }
 
-        // --- Lógica de Ocorrências ---
         function adicionarOcorrencia() {
             const resp = document.getElementById('oc-resp').value;
             const mat = document.getElementById('oc-mat').value;
@@ -273,8 +263,6 @@
             if (resp && mat && desc) {
                 ocorrencias.unshift({ data: new Date().toLocaleDateString(), resp, mat, desc });
                 localStorage.setItem('mpe_ocorrencias', JSON.stringify(ocorrencias));
-                document.getElementById('oc-mat').value = '';
-                document.getElementById('oc-desc').value = '';
                 renderizarOcorrencias();
             }
         }
@@ -288,14 +276,11 @@
         }
 
         function excluirOcorrencia(index) {
-            if(confirm("Excluir esta ocorrência?")) {
-                ocorrencias.splice(index, 1);
-                localStorage.setItem('mpe_ocorrencias', JSON.stringify(ocorrencias));
-                renderizarOcorrencias();
-            }
+            ocorrencias.splice(index, 1);
+            localStorage.setItem('mpe_ocorrencias', JSON.stringify(ocorrencias));
+            renderizarOcorrencias();
         }
 
-        // --- Funções existentes mantidas ---
         function filtrarRegistros() {
             const termo = document.getElementById('filtro-busca').value.toLowerCase();
             document.querySelectorAll('.dia-grupo').forEach(grupo => {
@@ -350,11 +335,9 @@
         }
 
         function excluirColaborador(index) {
-            if(confirm("Deseja excluir este colaborador?")) {
-                colaboradores.splice(index, 1);
-                localStorage.setItem('mpe_colaboradores', JSON.stringify(colaboradores));
-                renderizarColaboradores();
-            }
+            colaboradores.splice(index, 1);
+            localStorage.setItem('mpe_colaboradores', JSON.stringify(colaboradores));
+            renderizarColaboradores();
         }
 
         function renderizarInventario() {
@@ -391,11 +374,9 @@
         }
 
         function excluirLancamento(index) {
-            if (confirm("Tem certeza que deseja excluir este registro?")) {
-                movimentacoes.splice(index, 1);
-                localStorage.setItem('mpe_movimentacoes_v2', JSON.stringify(movimentacoes));
-                atualizarPaineis();
-            }
+            movimentacoes.splice(index, 1);
+            localStorage.setItem('mpe_movimentacoes_v2', JSON.stringify(movimentacoes));
+            atualizarPaineis();
         }
 
         document.getElementById('form-movimentacao').addEventListener('submit', function(e) {
