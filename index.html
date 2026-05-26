@@ -33,7 +33,7 @@
         
         .form-group { margin-bottom: 18px; }
         .form-group label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 600; color: #334155; }
-        .form-group input, .form-group select { width: 100%; padding: 11px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background-color: #f8fafc; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 11px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background-color: #f8fafc; }
         
         button { width: 100%; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         button:hover { background: #1d4ed8; }
@@ -61,7 +61,6 @@
         .repor-true { color: #dc2626; font-weight: bold; }
         .repor-false { color: #16a34a; }
 
-        /* CSS para Impressão */
         @media print {
             .sidebar, header, .btn-print, button, .form-group, .dashboard-cards, .box:not(#tela-registros .box):not(#tela-pedidos .box) { display: none !important; }
             body { background: white; }
@@ -84,6 +83,7 @@
             <li id="menu-pedidos" onclick="mudarTela('pedidos')">📝 Lista de Pedidos</li>
             <li id="menu-registros" onclick="mudarTela('registros')">📋 Lançamentos Registrados</li>
             <li id="menu-inventario" onclick="mudarTela('inventario')">📦 Inventário de Estoque</li>
+            <li id="menu-ocorrencias" onclick="mudarTela('ocorrencias')">⚠️ Ocorrências</li>
             <li id="menu-base-sul" onclick="mudarTela('base-sul')">👥 Colaboradores Base Sul</li>
         </menu>
     </div>
@@ -203,6 +203,31 @@
             </div>
         </div>
 
+        <div id="tela-ocorrencias" class="tela">
+            <div class="box">
+                <h2>Ocorrências com Materiais</h2>
+                <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <div class="form-group">
+                        <label>Colaborador</label>
+                        <select id="oc-resp"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Material</label>
+                        <input type="text" id="oc-mat" placeholder="Ex: Furadeira, EPI...">
+                    </div>
+                    <div class="form-group">
+                        <label>Descrição da Ocorrência</label>
+                        <textarea id="oc-desc" placeholder="Ex: Quebrado, perdido, devolvido em mau estado..."></textarea>
+                    </div>
+                    <button onclick="adicionarOcorrencia()" style="background: #d97706;">Registrar Ocorrência</button>
+                </div>
+                <table>
+                    <thead><tr><th>Data</th><th>Colaborador</th><th>Material</th><th>Descrição</th><th>Ações</th></tr></thead>
+                    <tbody id="corpo-tabela-ocorrencias"></tbody>
+                </table>
+            </div>
+        </div>
+
         <div id="tela-base-sul" class="tela">
             <div class="box">
                 <h2>Colaboradores - Base Sul</h2>
@@ -227,6 +252,7 @@
         let movimentacoes = JSON.parse(localStorage.getItem('mpe_movimentacoes_v2')) || [];
         let colaboradores = JSON.parse(localStorage.getItem('mpe_colaboradores')) || [];
         let listaPedidos = JSON.parse(localStorage.getItem('mpe_lista_pedidos')) || [];
+        let ocorrencias = JSON.parse(localStorage.getItem('mpe_ocorrencias')) || [];
 
         function mudarTela(nomeTela) {
             document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
@@ -236,8 +262,40 @@
             if (nomeTela === 'registros') renderizarHistoricoPorDatas();
             if (nomeTela === 'inventario') renderizarInventario();
             if (nomeTela === 'pedidos') renderizarListaPedidos();
+            if (nomeTela === 'ocorrencias') renderizarOcorrencias();
         }
 
+        // --- Lógica de Ocorrências ---
+        function adicionarOcorrencia() {
+            const resp = document.getElementById('oc-resp').value;
+            const mat = document.getElementById('oc-mat').value;
+            const desc = document.getElementById('oc-desc').value;
+            if (resp && mat && desc) {
+                ocorrencias.unshift({ data: new Date().toLocaleDateString(), resp, mat, desc });
+                localStorage.setItem('mpe_ocorrencias', JSON.stringify(ocorrencias));
+                document.getElementById('oc-mat').value = '';
+                document.getElementById('oc-desc').value = '';
+                renderizarOcorrencias();
+            }
+        }
+
+        function renderizarOcorrencias() {
+            const corpo = document.getElementById('corpo-tabela-ocorrencias');
+            corpo.innerHTML = '';
+            ocorrencias.forEach((oc, index) => {
+                corpo.innerHTML += `<tr><td>${oc.data}</td><td>${oc.resp}</td><td>${oc.mat}</td><td>${oc.desc}</td><td><button class="btn-del" onclick="excluirOcorrencia(${index})">X</button></td></tr>`;
+            });
+        }
+
+        function excluirOcorrencia(index) {
+            if(confirm("Excluir esta ocorrência?")) {
+                ocorrencias.splice(index, 1);
+                localStorage.setItem('mpe_ocorrencias', JSON.stringify(ocorrencias));
+                renderizarOcorrencias();
+            }
+        }
+
+        // --- Funções existentes mantidas ---
         function filtrarRegistros() {
             const termo = document.getElementById('filtro-busca').value.toLowerCase();
             document.querySelectorAll('.dia-grupo').forEach(grupo => {
@@ -278,12 +336,16 @@
 
         function renderizarColaboradores() {
             const corpo = document.getElementById('corpo-tabela-colaboradores');
-            const select = document.getElementById('txt-resp');
+            const selectResp = document.getElementById('txt-resp');
+            const selectOc = document.getElementById('oc-resp');
             corpo.innerHTML = '';
-            select.innerHTML = '';
+            selectResp.innerHTML = '';
+            selectOc.innerHTML = '';
             colaboradores.forEach((c, index) => {
                 corpo.innerHTML += `<tr><td>${c.nome}</td><td>${c.funcao}</td><td>${c.matricula}</td><td>${c.admissao}</td><td><button class="btn-del" onclick="excluirColaborador(${index})">X</button></td></tr>`;
-                select.innerHTML += `<option value="${c.nome} - ${c.funcao}">${c.nome} - ${c.funcao}</option>`;
+                const opt = `<option value="${c.nome} - ${c.funcao}">${c.nome} - ${c.funcao}</option>`;
+                selectResp.innerHTML += opt;
+                selectOc.innerHTML += opt;
             });
         }
 
@@ -391,6 +453,7 @@
         }
 
         renderizarColaboradores();
+        renderizarOcorrencias();
         ajustarCamposPorTipo();
         atualizarPaineis();
     </script>
