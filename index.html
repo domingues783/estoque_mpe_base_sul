@@ -50,6 +50,8 @@
         .badge-Entrada { background: #dcfce7; color: #16a34a; }
         .badge-Usado { background: #fee2e2; color: #ef4444; }
         .badge-Devolvido { background: #e0f2fe; color: #0284c7; }
+        .badge-EmUso { background: #fef3c7; color: #d97706; }
+        .badge-NaoDevolvido { background: #fae8ff; color: #c026d3; }
         .badge-NaoAplica { background: #f1f5f9; color: #475569; }
 
         .dia-grupo { margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: white; }
@@ -61,11 +63,11 @@
 
         /* CSS para Impressão */
         @media print {
-            .sidebar, header, .btn-print, button, .form-group, .dashboard-cards, .box:not(#tela-registros .box) { display: none !important; }
+            .sidebar, header, .btn-print, button, .form-group, .dashboard-cards, .box:not(#tela-registros .box):not(#tela-pedidos .box) { display: none !important; }
             body { background: white; }
             .main-content { margin: 0; padding: 0; width: 100%; }
             .tela { display: none; }
-            #tela-registros { display: block !important; }
+            #tela-registros, #tela-pedidos { display: block !important; }
             .dia-conteudo { display: block !important; }
             .dia-grupo { border: 1px solid #ccc; margin-bottom: 10px; }
             table { border: 1px solid #ccc; }
@@ -79,6 +81,7 @@
         <p>Estoque Base Sul</p>
         <menu>
             <li id="menu-movimentar" class="active" onclick="mudarTela('movimentar')">📤 Lançar Movimentação</li>
+            <li id="menu-pedidos" onclick="mudarTela('pedidos')">📝 Lista de Pedidos</li>
             <li id="menu-registros" onclick="mudarTela('registros')">📋 Lançamentos Registrados</li>
             <li id="menu-inventario" onclick="mudarTela('inventario')">📦 Inventário de Estoque</li>
             <li id="menu-base-sul" onclick="mudarTela('base-sul')">👥 Colaboradores Base Sul</li>
@@ -147,6 +150,8 @@
                             <select id="txt-status">
                                 <option value="Usado">Usado</option>
                                 <option value="Devolvido">Devolvido</option>
+                                <option value="EmUso">Em uso</option>
+                                <option value="NaoDevolvido">Não devolvido</option>
                                 <option value="NaoAplica">Não se aplica</option>
                             </select>
                         </div>
@@ -160,6 +165,18 @@
                         <tbody id="tabela-rapida"></tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+
+        <div id="tela-pedidos" class="tela">
+            <div class="box">
+                <h2>Lista de Pedidos</h2>
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <input type="text" id="novo-pedido" placeholder="Nome do Material..." style="padding: 8px; flex: 1; border: 1px solid #ccc; border-radius: 4px;">
+                    <button onclick="adicionarPedido()" style="width: auto; background: #059669;">Adicionar</button>
+                </div>
+                <button class="btn-print" onclick="window.print()" style="width: auto;">🖨️ Imprimir Lista</button>
+                <ul id="lista-pedidos" style="list-style: none; margin-top: 10px;"></ul>
             </div>
         </div>
 
@@ -198,7 +215,7 @@
                     </div>
                 </div>
                 <table>
-                    <thead><tr><th>Nome</th><th>Função</th><th>Matrícula</th><th>Admissão</th></tr></thead>
+                    <thead><tr><th>Nome</th><th>Função</th><th>Matrícula</th><th>Admissão</th><th>Ações</th></tr></thead>
                     <tbody id="corpo-tabela-colaboradores"></tbody>
                 </table>
             </div>
@@ -208,6 +225,7 @@
     <script>
         let movimentacoes = JSON.parse(localStorage.getItem('mpe_movimentacoes_v2')) || [];
         let colaboradores = JSON.parse(localStorage.getItem('mpe_colaboradores')) || [];
+        let listaPedidos = JSON.parse(localStorage.getItem('mpe_lista_pedidos')) || [];
 
         function mudarTela(nomeTela) {
             document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
@@ -216,6 +234,7 @@
             document.getElementById(`menu-${nomeTela}`).classList.add('active');
             if (nomeTela === 'registros') renderizarHistoricoPorDatas();
             if (nomeTela === 'inventario') renderizarInventario();
+            if (nomeTela === 'pedidos') renderizarListaPedidos();
         }
 
         function filtrarRegistros() {
@@ -261,10 +280,18 @@
             const select = document.getElementById('txt-resp');
             corpo.innerHTML = '';
             select.innerHTML = '';
-            colaboradores.forEach(c => {
-                corpo.innerHTML += `<tr><td>${c.nome}</td><td>${c.funcao}</td><td>${c.matricula}</td><td>${c.admissao}</td></tr>`;
+            colaboradores.forEach((c, index) => {
+                corpo.innerHTML += `<tr><td>${c.nome}</td><td>${c.funcao}</td><td>${c.matricula}</td><td>${c.admissao}</td><td><button class="btn-del" onclick="excluirColaborador(${index})">X</button></td></tr>`;
                 select.innerHTML += `<option value="${c.nome} - ${c.funcao}">${c.nome} - ${c.funcao}</option>`;
             });
+        }
+
+        function excluirColaborador(index) {
+            if(confirm("Deseja excluir este colaborador?")) {
+                colaboradores.splice(index, 1);
+                localStorage.setItem('mpe_colaboradores', JSON.stringify(colaboradores));
+                renderizarColaboradores();
+            }
         }
 
         function renderizarInventario() {
@@ -292,8 +319,8 @@
         }
 
         function editarStatus(index) {
-            const novo = prompt("Mudar para (Usado/Devolvido/NaoAplica):", movimentacoes[index].status);
-            if (novo && ['Usado', 'Devolvido', 'NaoAplica'].includes(novo)) {
+            const novo = prompt("Mudar para (Usado/Devolvido/EmUso/NaoDevolvido/NaoAplica):", movimentacoes[index].status);
+            if (novo && ['Usado', 'Devolvido', 'EmUso', 'NaoDevolvido', 'NaoAplica'].includes(novo)) {
                 movimentacoes[index].status = novo;
                 localStorage.setItem('mpe_movimentacoes_v2', JSON.stringify(movimentacoes));
                 atualizarPaineis();
@@ -336,6 +363,30 @@
                 const corpo = document.getElementById(`corpo-${data.replace(/\//g, '')}`);
                 itens.forEach(m => corpo.innerHTML += `<tr><td>${m.hora}</td><td>${m.qtd}</td><td>${m.material}</td><td>${m.responsavel || '-'}</td><td>${m.destino || '-'}</td><td><span class="badge badge-${m.status}">${m.status}</span></td></tr>`);
             });
+        }
+
+        function adicionarPedido() {
+            const mat = document.getElementById('novo-pedido').value;
+            if(mat) {
+                listaPedidos.push(mat);
+                localStorage.setItem('mpe_lista_pedidos', JSON.stringify(listaPedidos));
+                document.getElementById('novo-pedido').value = '';
+                renderizarListaPedidos();
+            }
+        }
+
+        function renderizarListaPedidos() {
+            const ul = document.getElementById('lista-pedidos');
+            ul.innerHTML = '';
+            listaPedidos.forEach((item, index) => {
+                ul.innerHTML += `<li style="padding: 8px; border-bottom: 1px solid #eee;">${item} <button onclick="removerPedido(${index})" style="width: auto; background: #ef4444; padding: 2px 8px; font-size: 11px;">Excluir</button></li>`;
+            });
+        }
+
+        function removerPedido(index) {
+            listaPedidos.splice(index, 1);
+            localStorage.setItem('mpe_lista_pedidos', JSON.stringify(listaPedidos));
+            renderizarListaPedidos();
         }
 
         renderizarColaboradores();
