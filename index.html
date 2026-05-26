@@ -80,6 +80,7 @@
         <p>Estoque Base Sul</p>
         <menu>
             <li id="menu-movimentar" class="active" onclick="mudarTela('movimentar')">📤 Lançar Movimentação</li>
+            <li id="menu-recebimento" onclick="mudarTela('recebimento')">📥 Recebimento de Materiais</li>
             <li id="menu-pedidos" onclick="mudarTela('pedidos')">📝 Lista de Pedidos</li>
             <li id="menu-registros" onclick="mudarTela('registros')">📋 Lançamentos Registrados</li>
             <li id="menu-inventario" onclick="mudarTela('inventario')">📦 Inventário de Estoque</li>
@@ -166,6 +167,29 @@
                         <tbody id="tabela-rapida"></tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+
+        <div id="tela-recebimento" class="tela">
+            <div class="box">
+                <h2>Recebimento de Materiais</h2>
+                <form id="form-recebimento">
+                    <div class="form-group"><label>Categoria</label>
+                        <select id="rec-cat" required>
+                            <option value="Hidráulica">Hidráulica</option>
+                            <option value="Elétrica">Elétrica</option>
+                            <option value="Serralheria">Serralheria</option>
+                            <option value="Marcenaria">Marcenaria</option>
+                            <option value="Construção Civil">Construção Civil</option>
+                            <option value="Pintura">Pintura</option>
+                            <option value="Geral">Geral</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Nome do Material</label><input type="text" id="rec-mat" required></div>
+                    <div class="form-group"><label>Origem do Material</label><input type="text" id="rec-origem" placeholder="Ex: Fornecedor, Obra, etc..." required></div>
+                    <div class="form-group"><label>Quantidade</label><input type="number" id="rec-qtd" min="1" required></div>
+                    <button type="submit" style="background: #059669;">Registrar Entrada no Estoque</button>
+                </form>
             </div>
         </div>
 
@@ -256,6 +280,26 @@
             if (nomeTela === 'ocorrencias') renderizarOcorrencias();
         }
 
+        document.getElementById('form-recebimento').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const agora = new Date();
+            movimentacoes.unshift({
+                data: agora.toLocaleDateString('pt-BR'),
+                hora: agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+                tipo: 'Entrada',
+                material: `[${document.getElementById('rec-cat').value}] ${document.getElementById('rec-mat').value.trim()}`,
+                origem: document.getElementById('rec-origem').value,
+                qtd: document.getElementById('rec-qtd').value,
+                responsavel: 'Estoque Central',
+                destino: 'N/A',
+                status: 'Entrada'
+            });
+            localStorage.setItem('mpe_movimentacoes_v2', JSON.stringify(movimentacoes));
+            this.reset();
+            atualizarPaineis();
+            alert("Recebimento registrado com sucesso!");
+        });
+
         function adicionarOcorrencia() {
             const resp = document.getElementById('oc-resp').value;
             const mat = document.getElementById('oc-mat').value;
@@ -290,9 +334,9 @@
 
         function exportarParaCSV() {
             if (movimentacoes.length === 0) { alert("Não há dados!"); return; }
-            let csvContent = "data:text/csv;charset=utf-8,\uFEFFData,Hora,Tipo,Material,Quantidade,Responsável,Destino,Status\n";
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFFData,Hora,Tipo,Material,Origem,Quantidade,Responsável,Destino,Status\n";
             movimentacoes.forEach(m => {
-                csvContent += `${m.data},${m.hora},${m.tipo},${m.material},${m.qtd},"${m.responsavel || ''}","${m.destino || ''}",${m.status}\n`;
+                csvContent += `${m.data},${m.hora},${m.tipo},${m.material},${m.origem || 'N/A'},${m.qtd},"${m.responsavel || ''}","${m.destino || ''}",${m.status}\n`;
             });
             const link = document.createElement("a");
             link.setAttribute("href", encodeURI(csvContent));
@@ -315,7 +359,7 @@
             const tabelaRapida = document.getElementById('tabela-rapida');
             tabelaRapida.innerHTML = '';
             movimentacoes.slice(0, 8).forEach((m, index) => {
-                tabelaRapida.innerHTML += `<tr><td>${m.hora}</td><td>${m.tipo}</td><td>${m.material}</td><td><span class="badge badge-${m.status}">${m.status}</span></td><td><button class="btn-edit" onclick="editarStatus(${index})">Editar</button><button class="btn-del" onclick="excluirLancamento(${index})">Excluir</button></td></tr>`;
+                tabelaRapida.innerHTML += `<tr><td>${m.hora}</td><td>${m.tipo}</td><td>${m.material}</td><td><span class="badge badge-${m.status}">${m.status}</span></td><td><button class="btn-edit" onclick="editarStatus(${index})">Editar</button><button class="btn-del" onclick="excluirLancamento(${index})">X</button></td></tr>`;
             });
         }
 
@@ -328,7 +372,7 @@
             selectOc.innerHTML = '';
             colaboradores.forEach((c, index) => {
                 corpo.innerHTML += `<tr><td>${c.nome}</td><td>${c.funcao}</td><td>${c.matricula}</td><td>${c.admissao}</td><td><button class="btn-del" onclick="excluirColaborador(${index})">X</button></td></tr>`;
-                const opt = `<option value="${c.nome} - ${c.funcao}">${c.nome} - ${c.funcao}</option>`;
+                const opt = `<option value="${c.nome}">${c.nome}</option>`;
                 selectResp.innerHTML += opt;
                 selectOc.innerHTML += opt;
             });
@@ -345,9 +389,10 @@
             corpo.innerHTML = '';
             let saldos = {};
             movimentacoes.forEach(m => {
-                let qtd = parseInt(m.qtd);
-                if (!saldos[m.material]) saldos[m.material] = 0;
-                m.tipo === 'Entrada' ? saldos[m.material] += qtd : saldos[m.material] -= qtd;
+                let qtd = parseInt(m.qtd) || 0;
+                let nome = m.material.trim();
+                if (!saldos[nome]) saldos[nome] = 0;
+                m.tipo === 'Entrada' ? saldos[nome] += qtd : saldos[nome] -= qtd;
             });
             for (let mat in saldos) {
                 let s = saldos[mat];
@@ -365,8 +410,8 @@
         }
 
         function editarStatus(index) {
-            const novo = prompt("Mudar para (Usado/Devolvido/EmUso/NaoDevolvido/NaoAplica):", movimentacoes[index].status);
-            if (novo && ['Usado', 'Devolvido', 'EmUso', 'NaoDevolvido', 'NaoAplica'].includes(novo)) {
+            const novo = prompt("Mudar status:", movimentacoes[index].status);
+            if (novo) {
                 movimentacoes[index].status = novo;
                 localStorage.setItem('mpe_movimentacoes_v2', JSON.stringify(movimentacoes));
                 atualizarPaineis();
@@ -386,7 +431,7 @@
                 data: agora.toLocaleDateString('pt-BR'),
                 hora: agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
                 tipo: document.getElementById('txt-tipo').value,
-                material: document.getElementById('txt-material').value,
+                material: document.getElementById('txt-material').value.trim(),
                 qtd: document.getElementById('txt-qtd').value,
                 responsavel: document.getElementById('txt-resp').value,
                 destino: document.getElementById('txt-destino').value,
@@ -403,9 +448,9 @@
             container.innerHTML = '';
             [...new Set(movimentacoes.map(m => m.data))].forEach(data => {
                 const itens = movimentacoes.filter(m => m.data === data);
-                container.innerHTML += `<div class="dia-grupo"><div class="dia-header" onclick="this.parentElement.classList.toggle('aberto')">📅 ${data} (${itens.length} itens)</div><div class="dia-conteudo"><table><thead><tr><th>Hora</th><th>Qtd</th><th>Material</th><th>Responsável</th><th>Destino</th><th>Status</th></tr></thead><tbody id="corpo-${data.replace(/\//g, '')}"></tbody></table></div></div>`;
+                container.innerHTML += `<div class="dia-grupo"><div class="dia-header" onclick="this.parentElement.classList.toggle('aberto')">📅 ${data} (${itens.length} itens)</div><div class="dia-conteudo"><table><thead><tr><th>Hora</th><th>Qtd</th><th>Material</th><th>Origem</th><th>Responsável</th><th>Destino</th><th>Status</th></tr></thead><tbody id="corpo-${data.replace(/\//g, '')}"></tbody></table></div></div>`;
                 const corpo = document.getElementById(`corpo-${data.replace(/\//g, '')}`);
-                itens.forEach(m => corpo.innerHTML += `<tr><td>${m.hora}</td><td>${m.qtd}</td><td>${m.material}</td><td>${m.responsavel || '-'}</td><td>${m.destino || '-'}</td><td><span class="badge badge-${m.status}">${m.status}</span></td></tr>`);
+                itens.forEach(m => corpo.innerHTML += `<tr><td>${m.hora}</td><td>${m.qtd}</td><td>${m.material}</td><td>${m.origem || '-'}</td><td>${m.responsavel || '-'}</td><td>${m.destino || '-'}</td><td><span class="badge badge-${m.status}">${m.status}</span></td></tr>`);
             });
         }
 
