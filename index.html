@@ -1,318 +1,977 @@
 <!DOCTYPE html>
+
 <html lang="pt-BR">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>MPE Engenharia - Estoque Base Sul</title>
+
     <style>
+
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
         body { background-color: #f1f5f9; color: #1e293b; display: flex; }
+
         
+
         .sidebar { width: 260px; height: 100vh; background: #0f172a; color: white; padding: 25px 20px; position: fixed; }
+
         .sidebar h2 { font-size: 16px; font-weight: 700; color: #38bdf8; text-align: center; margin-bottom: 5px; text-transform: uppercase; }
+
         .sidebar p { font-size: 12px; color: #94a3b8; text-align: center; margin-bottom: 35px; letter-spacing: 1px; }
+
         .sidebar menu { list-style: none; }
+
         .sidebar menu li { padding: 12px 15px; margin-bottom: 10px; background: #1e293b; border-radius: 6px; cursor: pointer; transition: 0.3s; font-size: 14px; }
+
         .sidebar menu li:hover, .sidebar menu li.active { background: #38bdf8; color: #0f172a; font-weight: 600; }
 
+
+
         .main-content { flex: 1; margin-left: 260px; padding: 40px; }
+
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 35px; border-bottom: 2px solid #cbd5e1; padding-bottom: 20px; }
+
         h1 { color: #1e293b; font-size: 26px; }
 
+
+
         .tela { display: none; }
+
         .tela.ativa { display: block; }
 
+
+
         .dashboard-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 35px; }
+
         .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border-left: 5px solid #2563eb; }
+
         .card h3 { font-size: 13px; color: #64748b; text-transform: uppercase; }
+
         .card p { font-size: 28px; font-weight: bold; margin-top: 8px; color: #0f172a; }
 
+
+
         .grid-operacional { display: grid; grid-template-columns: 1fr 1.2fr; gap: 25px; }
+
         .box { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 25px; }
-        .box h2 { font-size: 18px; margin-bottom: 20px; color: #0f172a; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
+
+        .box h2 { font-size: 18px; margin-bottom: 20px; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
+
         
+
         .form-group { margin-bottom: 18px; }
+
         .form-group label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 600; color: #334155; }
-        .form-group input, .form-group select { width: 100%; padding: 11px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background-color: #f8fafc; }
+
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 11px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background-color: #f8fafc; }
+
         
+
         button { width: 100%; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+
         button:hover { background: #1d4ed8; }
+
         
+
         .btn-edit { background: #64748b; padding: 2px 8px; font-size: 11px; margin-right: 4px; }
+
         .btn-del { background: #ef4444; padding: 2px 8px; font-size: 11px; }
+
         .btn-print { background: #0f172a; margin-bottom: 20px; }
 
+
+
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+
         th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; }
+
         th { background-color: #f8fafc; color: #64748b; }
+
         
+
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
+
         .badge-Entrada { background: #dcfce7; color: #16a34a; }
+
         .badge-Usado { background: #fee2e2; color: #ef4444; }
+
         .badge-Devolvido { background: #e0f2fe; color: #0284c7; }
+
+        .badge-EmUso { background: #fef3c7; color: #d97706; }
+
+        .badge-NaoDevolvido { background: #fae8ff; color: #c026d3; }
+
         .badge-NaoAplica { background: #f1f5f9; color: #475569; }
 
+
+
         .dia-grupo { margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: white; }
+
         .dia-header { background: #e2e8f0; padding: 15px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: #1e293b; }
+
         .dia-conteudo { display: none; padding: 15px; border-top: 1px solid #cbd5e1; }
+
         .dia-grupo.aberto .dia-conteudo { display: block; }
+
+        .repor-true { color: #dc2626; font-weight: bold; }
+
+        .repor-false { color: #16a34a; }
+
+
+
+        @media print {
+
+            .sidebar, header, .btn-print, button, .form-group, .dashboard-cards, .box { display: none !important; }
+
+            body { background: white; }
+
+            .main-content { margin: 0; padding: 0; width: 100%; }
+
+            .tela.ativa { display: block !important; }
+
+            .tela.ativa .box { display: block !important; }
+
+            .dia-conteudo { display: block !important; }
+
+            .dia-grupo { border: 1px solid #ccc; margin-bottom: 10px; }
+
+            table { border: 1px solid #ccc; display: table !important; }
+
+        }
+
     </style>
+
 </head>
+
 <body>
 
+
+
     <div class="sidebar">
+
         <h2>MPE Engenharia</h2>
+
         <p>Estoque Base Sul</p>
+
         <menu>
+
             <li id="menu-movimentar" class="active" onclick="mudarTela('movimentar')">📤 Lançar Movimentação</li>
+
+            <li id="menu-recebimento" onclick="mudarTela('recebimento')">📥 Recebimento de Materiais</li>
+
+            <li id="menu-pedidos" onclick="mudarTela('pedidos')">📝 Lista de Pedidos</li>
+
             <li id="menu-registros" onclick="mudarTela('registros')">📋 Lançamentos Registrados</li>
+
+            <li id="menu-inventario" onclick="mudarTela('inventario')">📦 Inventário de Estoque</li>
+
+            <li id="menu-ocorrencias" onclick="mudarTela('ocorrencias')">⚠️ Ocorrências</li>
+
             <li id="menu-base-sul" onclick="mudarTela('base-sul')">👥 Colaboradores Base Sul</li>
+
         </menu>
+
     </div>
 
+
+
     <div class="main-content">
+
         <header>
+
             <h1>MPE Engenharia - Controle de Fluxo</h1>
+
             <span style="font-weight: 600; color: #10b981; background: #dcfce7; padding: 6px 12px; border-radius: 20px; font-size: 13px;">● Operação Ativa</span>
+
         </header>
 
+
+
         <div id="tela-movimentar" class="tela ativa">
+
             <div class="dashboard-cards">
+
                 <div class="card"><h3>Movimentações Gerais</h3><p id="card-total">0</p></div>
+
                 <div class="card" style="border-left-color: #10b981;"><h3>Entradas no Estoque</h3><p id="card-entradas">0</p></div>
+
             </div>
 
             <div class="grid-operacional">
+
                 <div class="box">
+
                     <h2>Registrar Entrada ou Saída</h2>
+
                     <form id="form-movimentacao">
-                        <div class="form-group">
-                            <label>Tipo de Operação</label>
+
+                        <div class="form-group"><label>Tipo de Operação</label>
+
                             <select id="txt-tipo" onchange="ajustarCamposPorTipo()" required>
+
                                 <option value="Saída">Saída (Retirada de Material)</option>
+
                                 <option value="Entrada">Entrada (Abastecimento de Estoque)</option>
+
                             </select>
+
                         </div>
-                        <div class="form-group"><label>Material / Produto</label>
-                            <input type="text" id="txt-material" placeholder="Digite o nome do produto" required>
-                        </div>
+
+                        <div class="form-group"><label>Material / Produto</label><input type="text" id="txt-material" required></div>
+
                         <div class="form-group"><label>Quantidade</label><input type="number" id="txt-qtd" min="1" required></div>
+
                         <div class="form-group" id="grupo-responsavel"><label>Responsável</label><select id="txt-resp"></select></div>
+
                         <div class="form-group" id="grupo-destino"><label>Destino</label>
+
                             <select id="txt-destino">
+
                                 <option value="Pq. Ribeirão Cocaia">Pq. Ribeirão Cocaia</option>
+
                                 <option value="Pq. Ribeirão Colônia">Pq. Ribeirão Colônia</option>
+
                                 <option value="Pq. Lydia Natalizio">Pq. Lydia Natalizio</option>
+
                                 <option value="Pq. M'Boi Mirim">Pq. M'Boi Mirim</option>
+
                                 <option value="Pq. Cantinho do Céu">Pq. Cantinho do Céu</option>
+
                                 <option value="Pq. Feitiço da Vila">Pq. Feitiço da Vila</option>
+
                                 <option value="Pq. Guanhembu">Pq. Guanhembu</option>
+
                                 <option value="Pq. Praia do Sol">Pq. Praia do Sol</option>
+
                                 <option value="Pq. Laguinho">Pq. Laguinho</option>
+
                                 <option value="Pq. Barragem do Guarapiranga">Pq. Barragem do Guarapiranga</option>
+
                                 <option value="Pq. Três Lagos">Pq. Três Lagos</option>
+
                                 <option value="Pq. Bufalos">Pq. Bufalos</option>
+
                                 <option value="Equipamento de Proteção Individual">Equipamento de Proteção Individual</option>
+
                                 <option value="Pq. Sete Campos">Pq. Sete Campos</option>
+
                                 <option value="Pq. Shangrilá">Pq. Shangrilá</option>
+
                                 <option value="Pq. Aristocrata">Pq. Aristocrata</option>
+
                                 <option value="Pq. Parelheiros">Pq. Parelheiros</option>
+
                                 <option value="Pq. Ecológico Central">Pq. Ecológico Central</option>
+
                                 <option value="Pq. Natural Varginha">Pq. Natural Varginha</option>
+
                                 <option value="Pq. São José">Pq. São José</option>
+
                                 <option value="Pq. Natural Bororé">Pq. Natural Bororé</option>
+
                                 <option value="Pq. Herculano">Pq. Herculano</option>
+
                                 <option value="Pq. Nove de Julho">Pq. Nove de Julho</option>
+
                                 <option value="UBS">UBS</option>
+
+                                <option value="Base Leopoldina">Base Leopoldina</option>
+
                                 <option value="Pq. Castelo">Pq. Castelo</option>
+
                                 <option value="Pq. Horizonte Sul">Pq. Horizonte Sul</option>
+
                                 <option value="Pq. Santo Dias">Pq. Santo Dias</option>
+
                                 <option value="Maleta Pessoal">Maleta Pessoal</option>
+
                                 <option value="Orla Guarapiranga Cardial">Orla Guarapiranga Cardial</option>
+
                                 <option value="Pq. Natural Itaim">Pq. Natural Itaim</option>
+
                             </select>
+
                         </div>
+
                         <div class="form-group" id="grupo-status"><label>Status de Destino</label>
+
                             <select id="txt-status">
+
                                 <option value="Usado">Usado</option>
+
                                 <option value="Devolvido">Devolvido</option>
+
+                                <option value="EmUso">Em uso</option>
+
+                                <option value="NaoDevolvido">Não devolvido</option>
+
                                 <option value="NaoAplica">Não se aplica</option>
+
                             </select>
+
                         </div>
+
                         <button type="submit">Confirmar Baixa no Estoque</button>
+
                     </form>
+
                 </div>
 
                 <div class="box">
+
                     <h2>Últimos Lançamentos</h2>
+
                     <table>
+
                         <thead><tr><th>Hora</th><th>Tipo</th><th>Material</th><th>Status</th><th>Ações</th></tr></thead>
+
                         <tbody id="tabela-rapida"></tbody>
+
                     </table>
+
                 </div>
+
             </div>
+
         </div>
+
+
+
+        <div id="tela-recebimento" class="tela">
+
+            <div class="box">
+
+                <h2>Recebimento de Materiais</h2>
+
+                <form id="form-recebimento">
+
+                    <div class="form-group"><label>Categoria</label>
+
+                        <select id="rec-cat" required>
+
+                            <option value="Hidráulica">Hidráulica</option>
+
+                            <option value="Elétrica">Elétrica</option>
+
+                            <option value="Serralheria">Serralheria</option>
+
+                            <option value="Marcenaria">Marcenaria</option>
+
+                            <option value="Construção Civil">Construção Civil</option>
+
+                            <option value="Pintura">Pintura</option>
+
+                            <option value="Geral">Geral</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="form-group"><label>Nome do Material</label><input type="text" id="rec-mat" required></div>
+
+                    <div class="form-group"><label>Origem do Material</label><input type="text" id="rec-origem" placeholder="Ex: Fornecedor, Obra, etc..." required></div>
+
+                    <div class="form-group"><label>Quantidade</label><input type="number" id="rec-qtd" min="1" required></div>
+
+                    <button type="submit" style="background: #059669;">Registrar Entrada no Estoque</button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+
+
+        <div id="tela-pedidos" class="tela">
+
+            <div class="box">
+
+                <h2>Lista de Pedidos</h2>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+
+                    <input type="text" id="novo-pedido" placeholder="Nome do Material..." style="padding: 8px; flex: 1; border: 1px solid #cbd5e1; border-radius: 6px;">
+
+                    <button onclick="adicionarPedido()" style="width: auto; background: #059669;">Adicionar</button>
+
+                </div>
+
+                <button class="btn-print" onclick="window.print()" style="width: auto;">🖨️ Imprimir Lista</button>
+
+                <ul id="lista-pedidos" style="list-style: none; margin-top: 10px;"></ul>
+
+            </div>
+
+        </div>
+
+
 
         <div id="tela-registros" class="tela">
+
             <div class="box">
+
                 <h2>Histórico Consolidado</h2>
+
                 <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                    <button class="btn-print" onclick="window.print()">🖨️ Imprimir</button>
-                    <button onclick="exportarParaCSV()" style="background: #059669;">📊 Exportar para Excel</button>
+
+                    <button class="btn-print" onclick="window.print()" style="width: auto;">🖨️ Imprimir</button>
+
+                    <button onclick="exportarParaCSV()" style="width: auto; background: #059669;">📊 Exportar para Excel</button>
+
                 </div>
-                <div class="form-group">
-                    <input type="text" id="filtro-busca" placeholder="🔍 Buscar por material, responsável, destino ou data..." onkeyup="filtrarRegistros()">
-                </div>
+
+                <div class="form-group"><input type="text" id="filtro-busca" placeholder="🔍 Buscar..." onkeyup="filtrarRegistros()"></div>
+
                 <div id="container-datas"></div>
+
             </div>
+
         </div>
+
+
+
+        <div id="tela-inventario" class="tela">
+
+            <div class="box">
+
+                <h2>Saldo Atual de Estoque</h2>
+
+                <table>
+
+                    <thead><tr><th>Material</th><th>Saldo Atual</th><th>Status</th></tr></thead>
+
+                    <tbody id="corpo-tabela-inventario"></tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+
+        <div id="tela-ocorrencias" class="tela">
+
+            <div class="box">
+
+                <h2>Ocorrências com Materiais</h2>
+
+                <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+
+                    <div class="form-group"><label>Colaborador</label><select id="oc-resp"></select></div>
+
+                    <div class="form-group"><label>Material</label><input type="text" id="oc-mat"></div>
+
+                    <div class="form-group"><label>Descrição da Ocorrência</label><textarea id="oc-desc"></textarea></div>
+
+                    <button onclick="adicionarOcorrencia()" style="background: #d97706;">Registrar Ocorrência</button>
+
+                </div>
+
+                <table>
+
+                    <thead><tr><th>Data</th><th>Colaborador</th><th>Material</th><th>Descrição</th><th>Ações</th></tr></thead>
+
+                    <tbody id="corpo-tabela-ocorrencias"></tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
 
         <div id="tela-base-sul" class="tela">
+
             <div class="box">
+
                 <h2>Colaboradores - Base Sul</h2>
+
                 <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+
                     <div style="display: flex; gap: 10px;">
+
                         <input type="text" id="novo-nome" placeholder="Nome">
+
                         <input type="text" id="novo-funcao" placeholder="Função">
+
                         <input type="text" id="novo-matricula" placeholder="Matrícula">
+
                         <input type="text" id="novo-admissao" placeholder="Admissão">
-                        <button onclick="adicionarColaborador()">+ Adicionar</button>
+
+                        <button onclick="adicionarColaborador()" style="width: auto;">+ Adicionar</button>
+
                     </div>
+
                 </div>
+
                 <table>
-                    <thead><tr><th>Nome</th><th>Função</th><th>Matrícula</th><th>Admissão</th></tr></thead>
+
+                    <thead><tr><th>Nome</th><th>Função</th><th>Matrícula</th><th>Admissão</th><th>Ações</th></tr></thead>
+
                     <tbody id="corpo-tabela-colaboradores"></tbody>
+
                 </table>
+
             </div>
+
         </div>
+
     </div>
 
+
+
     <script>
+
         let movimentacoes = JSON.parse(localStorage.getItem('mpe_movimentacoes_v2')) || [];
-        let colaboradores = JSON.parse(localStorage.getItem('mpe_colaboradores')) || [
-            { nome: "Adão Custodio da Cruz", funcao: "Encarregado", matricula: "010787", admissao: "10/07/2006" },
-            { nome: "Alcides dos Santos Oliveira", funcao: "Eletricista", matricula: "010789", admissao: "14/02/2011" }
-        ];
+
+        let colaboradores = JSON.parse(localStorage.getItem('mpe_colaboradores')) || [];
+
+        let listaPedidos = JSON.parse(localStorage.getItem('mpe_lista_pedidos')) || [];
+
+        let ocorrencias = JSON.parse(localStorage.getItem('mpe_ocorrencias')) || [];
+
+
 
         function mudarTela(nomeTela) {
+
             document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+
             document.querySelectorAll('.sidebar menu li').forEach(l => l.classList.remove('active'));
+
             document.getElementById(`tela-${nomeTela}`).classList.add('ativa');
+
             document.getElementById(`menu-${nomeTela}`).classList.add('active');
+
             if (nomeTela === 'registros') renderizarHistoricoPorDatas();
+
+            if (nomeTela === 'inventario') renderizarInventario();
+
+            if (nomeTela === 'pedidos') renderizarListaPedidos();
+
+            if (nomeTela === 'ocorrencias') renderizarOcorrencias();
+
         }
 
-        function filtrarRegistros() {
-            const termo = document.getElementById('filtro-busca').value.toLowerCase();
-            document.querySelectorAll('.dia-grupo').forEach(grupo => {
-                grupo.style.display = grupo.innerText.toLowerCase().includes(termo) ? "" : "none";
-            });
-        }
 
-        function exportarParaCSV() {
-            if (movimentacoes.length === 0) { alert("Não há dados para exportar!"); return; }
-            let csvContent = "data:text/csv;charset=utf-8,\uFEFFData,Hora,Tipo,Material,Quantidade,Responsável,Destino,Status\n";
-            movimentacoes.forEach(m => {
-                csvContent += `${m.data},${m.hora},${m.tipo},${m.material},${m.qtd},"${m.responsavel || ''}","${m.destino || ''}",${m.status}\n`;
-            });
-            const link = document.createElement("a");
-            link.setAttribute("href", encodeURI(csvContent));
-            link.setAttribute("download", "Relatorio_Estoque_Base_Sul.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
 
-        function ajustarCamposPorTipo() {
-            const display = document.getElementById('txt-tipo').value === 'Entrada' ? 'none' : 'block';
-            document.getElementById('grupo-responsavel').style.display = display;
-            document.getElementById('grupo-destino').style.display = display;
-            document.getElementById('grupo-status').style.display = display;
-        }
+        document.getElementById('form-recebimento').addEventListener('submit', function(e) {
 
-        function atualizarPaineis() {
-            document.getElementById('card-total').innerText = movimentacoes.length;
-            document.getElementById('card-entradas').innerText = movimentacoes.filter(m => m.tipo === 'Entrada').length;
-            const tabelaRapida = document.getElementById('tabela-rapida');
-            tabelaRapida.innerHTML = '';
-            movimentacoes.slice(0, 8).forEach((m, index) => {
-                tabelaRapida.innerHTML += `<tr><td>${m.hora}</td><td>${m.tipo}</td><td>${m.material}</td><td><span class="badge badge-${m.status}">${m.status}</span></td><td><button class="btn-edit" onclick="editarStatus(${index})">Editar</button><button class="btn-del" onclick="excluirLancamento(${index})">Excluir</button></td></tr>`;
-            });
-        }
-
-        function renderizarColaboradores() {
-            const corpo = document.getElementById('corpo-tabela-colaboradores');
-            const select = document.getElementById('txt-resp');
-            corpo.innerHTML = '';
-            select.innerHTML = '';
-            colaboradores.forEach(c => {
-                corpo.innerHTML += `<tr><td>${c.nome}</td><td>${c.funcao}</td><td>${c.matricula}</td><td>${c.admissao}</td></tr>`;
-                select.innerHTML += `<option value="${c.nome} - ${c.funcao}">${c.nome} - ${c.funcao}</option>`;
-            });
-        }
-
-        function adicionarColaborador() {
-            const nome = document.getElementById('novo-nome').value;
-            const funcao = document.getElementById('novo-funcao').value;
-            const matricula = document.getElementById('novo-matricula').value;
-            const admissao = document.getElementById('novo-admissao').value;
-            if(nome && funcao) {
-                colaboradores.push({ nome, funcao, matricula, admissao });
-                localStorage.setItem('mpe_colaboradores', JSON.stringify(colaboradores));
-                renderizarColaboradores();
-            }
-        }
-
-        function editarStatus(index) {
-            const novo = prompt("Mudar para (Usado/Devolvido/NaoAplica):", movimentacoes[index].status);
-            if (novo && ['Usado', 'Devolvido', 'NaoAplica'].includes(novo)) {
-                movimentacoes[index].status = novo;
-                localStorage.setItem('mpe_movimentacoes_v2', JSON.stringify(movimentacoes));
-                atualizarPaineis();
-            }
-        }
-
-        function excluirLancamento(index) {
-            if (confirm("Tem certeza que deseja excluir este registro?")) {
-                movimentacoes.splice(index, 1);
-                localStorage.setItem('mpe_movimentacoes_v2', JSON.stringify(movimentacoes));
-                atualizarPaineis();
-            }
-        }
-
-        document.getElementById('form-movimentacao').addEventListener('submit', function(e) {
             e.preventDefault();
+
             const agora = new Date();
+
             movimentacoes.unshift({
+
                 data: agora.toLocaleDateString('pt-BR'),
+
                 hora: agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
-                tipo: document.getElementById('txt-tipo').value,
-                material: document.getElementById('txt-material').value,
-                qtd: document.getElementById('txt-qtd').value,
-                responsavel: document.getElementById('txt-resp').value,
-                destino: document.getElementById('txt-destino').value,
-                status: document.getElementById('txt-tipo').value === 'Entrada' ? 'Entrada' : document.getElementById('txt-status').value
+
+                tipo: 'Entrada',
+
+                material: `[${document.getElementById('rec-cat').value}] ${document.getElementById('rec-mat').value.trim()}`,
+
+                origem: document.getElementById('rec-origem').value,
+
+                qtd: document.getElementById('rec-qtd').value,
+
+                responsavel: 'Estoque Central',
+
+                destino: 'N/A',
+
+                status: 'Entrada'
+
             });
+
             localStorage.setItem('mpe_movimentacoes_v2', JSON.stringify(movimentacoes));
+
             this.reset();
-            ajustarCamposPorTipo();
+
             atualizarPaineis();
+
+            alert("Recebimento registrado com sucesso!");
+
         });
 
-        function renderizarHistoricoPorDatas() {
-            const container = document.getElementById('container-datas');
-            container.innerHTML = '';
-            [...new Set(movimentacoes.map(m => m.data))].forEach(data => {
-                const itens = movimentacoes.filter(m => m.data === data);
-                container.innerHTML += `<div class="dia-grupo"><div class="dia-header" onclick="this.parentElement.classList.toggle('aberto')">📅 ${data} (${itens.length} itens)</div><div class="dia-conteudo"><table><thead><tr><th>Hora</th><th>Qtd</th><th>Material</th><th>Responsável</th><th>Destino</th><th>Status</th></tr></thead><tbody id="corpo-${data.replace(/\//g, '')}"></tbody></table></div></div>`;
-                const corpo = document.getElementById(`corpo-${data.replace(/\//g, '')}`);
-                itens.forEach(m => corpo.innerHTML += `<tr><td>${m.hora}</td><td>${m.qtd}</td><td>${m.material}</td><td>${m.responsavel || '-'}</td><td>${m.destino || '-'}</td><td><span class="badge badge-${m.status}">${m.status}</span></td></tr>`);
-            });
+
+
+        function adicionarOcorrencia() {
+
+            const resp = document.getElementById('oc-resp').value;
+
+            const mat = document.getElementById('oc-mat').value;
+
+            const desc = document.getElementById('oc-desc').value;
+
+            if (resp && mat && desc) {
+
+                ocorrencias.unshift({ data: new Date().toLocaleDateString(), resp, mat, desc });
+
+                localStorage.setItem('mpe_ocorrencias', JSON.stringify(ocorrencias));
+
+                renderizarOcorrencias();
+
+            }
+
         }
 
+
+
+        function renderizarOcorrencias() {
+
+            const corpo = document.getElementById('corpo-tabela-ocorrencias');
+
+            corpo.innerHTML = '';
+
+            ocorrencias.forEach((oc, index) => {
+
+                corpo.innerHTML += `<tr><td>${oc.data}</td><td>${oc.resp}</td><td>${oc.mat}</td><td>${oc.desc}</td><td><button class="btn-del" onclick="excluirOcorrencia(${index})">X</button></td></tr>`;
+
+            });
+
+        }
+
+
+
+        function excluirOcorrencia(index) {
+
+            ocorrencias.splice(index, 1);
+
+            localStorage.setItem('mpe_ocorrencias', JSON.stringify(ocorrencias));
+
+            renderizarOcorrencias();
+
+        }
+
+
+
+        function filtrarRegistros() {
+
+            const termo = document.getElementById('filtro-busca').value.toLowerCase();
+
+            document.querySelectorAll('.dia-grupo').forEach(grupo => {
+
+                grupo.style.display = grupo.innerText.toLowerCase().includes(termo) ? "" : "none";
+
+            });
+
+        }
+
+
+
+        function exportarParaCSV() {
+
+            if (movimentacoes.length === 0) { alert("Não há dados!"); return; }
+
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFFData,Hora,Tipo,Material,Origem,Quantidade,Responsável,Destino,Status\n";
+
+            movimentacoes.forEach(m => {
+
+                csvContent += `${m.data},${m.hora},${m.tipo},${m.material},${m.origem || 'N/A'},${m.qtd},"${m.responsavel || ''}","${m.destino || ''}",${m.status}\n`;
+
+            });
+
+            const link = document.createElement("a");
+
+            link.setAttribute("href", encodeURI(csvContent));
+
+            link.setAttribute("download", "Relatorio_Estoque_Base_Sul.csv");
+
+            document.body.appendChild(link);
+
+            link.click();
+
+            document.body.removeChild(link);
+
+        }
+
+
+
+        function ajustarCamposPorTipo() {
+
+            const display = document.getElementById('txt-tipo').value === 'Entrada' ? 'none' : 'block';
+
+            document.getElementById('grupo-responsavel').style.display = display;
+
+            document.getElementById('grupo-destino').style.display = display;
+
+            document.getElementById('grupo-status').style.display = display;
+
+        }
+
+
+
+        function atualizarPaineis() {
+
+            document.getElementById('card-total').innerText = movimentacoes.length;
+
+            document.getElementById('card-entradas').innerText = movimentacoes.filter(m => m.tipo === 'Entrada').length;
+
+            const tabelaRapida = document.getElementById('tabela-rapida');
+
+            tabelaRapida.innerHTML = '';
+
+            movimentacoes.slice(0, 8).forEach((m, index) => {
+
+                tabelaRapida.innerHTML += `<tr><td>${m.hora}</td><td>${m.tipo}</td><td>${m.material}</td><td><span class="badge badge-${m.status}">${m.status}</span></td><td><button class="btn-edit" onclick="editarStatus(${index})">Editar</button><button class="btn-del" onclick="excluirLancamento(${index})">X</button></td></tr>`;
+
+            });
+
+        }
+
+
+
+        function renderizarColaboradores() {
+
+            const corpo = document.getElementById('corpo-tabela-colaboradores');
+
+            const selectResp = document.getElementById('txt-resp');
+
+            const selectOc = document.getElementById('oc-resp');
+
+            corpo.innerHTML = '';
+
+            selectResp.innerHTML = '';
+
+            selectOc.innerHTML = '';
+
+            colaboradores.forEach((c, index) => {
+
+                corpo.innerHTML += `<tr><td>${c.nome}</td><td>${c.funcao}</td><td>${c.matricula}</td><td>${c.admissao}</td><td><button class="btn-del" onclick="excluirColaborador(${index})">X</button></td></tr>`;
+
+                const opt = `<option value="${c.nome}">${c.nome}</option>`;
+
+                selectResp.innerHTML += opt;
+
+                selectOc.innerHTML += opt;
+
+            });
+
+        }
+
+
+
+        function excluirColaborador(index) {
+
+            colaboradores.splice(index, 1);
+
+            localStorage.setItem('mpe_colaboradores', JSON.stringify(colaboradores));
+
+            renderizarColaboradores();
+
+        }
+
+
+
+        function renderizarInventario() {
+
+            const corpo = document.getElementById('corpo-tabela-inventario');
+
+            corpo.innerHTML = '';
+
+            let saldos = {};
+
+            movimentacoes.forEach(m => {
+
+                let qtd = parseInt(m.qtd) || 0;
+
+                // Remove [Categoria] para padronizar o nome
+
+                let nome = m.material.replace(/\[.*?\]\s*/, '').trim(); 
+
+                if (!saldos[nome]) saldos[nome] = 0;
+
+                m.tipo === 'Entrada' ? saldos[nome] += qtd : saldos[nome] -= qtd;
+
+            });
+
+            for (let mat in saldos) {
+
+                let s = saldos[mat];
+
+                corpo.innerHTML += `<tr><td>${mat}</td><td>${s}</td><td class="${s <= 2 ? 'repor-true' : 'repor-false'}">${s <= 2 ? '⚠️ REPOR' : 'OK'}</td></tr>`;
+
+            }
+
+        }
+
+
+
+        function adicionarColaborador() {
+
+            const nome = document.getElementById('novo-nome').value;
+
+            if(nome) {
+
+                colaboradores.push({ nome, funcao: document.getElementById('novo-funcao').value, matricula: document.getElementById('novo-matricula').value, admissao: document.getElementById('novo-admissao').value });
+
+                localStorage.setItem('mpe_colaboradores', JSON.stringify(colaboradores));
+
+                renderizarColaboradores();
+
+            }
+
+        }
+
+
+
+        function editarStatus(index) {
+
+            const novo = prompt("Mudar status:", movimentacoes[index].status);
+
+            if (novo) {
+
+                movimentacoes[index].status = novo;
+
+                localStorage.setItem('mpe_movimentacoes_v2', JSON.stringify(movimentacoes));
+
+                atualizarPaineis();
+
+            }
+
+        }
+
+
+
+        function excluirLancamento(index) {
+
+            movimentacoes.splice(index, 1);
+
+            localStorage.setItem('mpe_movimentacoes_v2', JSON.stringify(movimentacoes));
+
+            atualizarPaineis();
+
+        }
+
+
+
+        document.getElementById('form-movimentacao').addEventListener('submit', function(e) {
+
+            e.preventDefault();
+
+            const agora = new Date();
+
+            movimentacoes.unshift({
+
+                data: agora.toLocaleDateString('pt-BR'),
+
+                hora: agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
+
+                tipo: document.getElementById('txt-tipo').value,
+
+                // Remove [Categoria] antes de salvar
+
+                material: document.getElementById('txt-material').value.replace(/\[.*?\]\s*/, '').trim(),
+
+                qtd: document.getElementById('txt-qtd').value,
+
+                responsavel: document.getElementById('txt-resp').value,
+
+                destino: document.getElementById('txt-destino').value,
+
+                status: document.getElementById('txt-tipo').value === 'Entrada' ? 'Entrada' : document.getElementById('txt-status').value
+
+            });
+
+            localStorage.setItem('mpe_movimentacoes_v2', JSON.stringify(movimentacoes));
+
+            this.reset();
+
+            ajustarCamposPorTipo();
+
+            atualizarPaineis();
+
+        });
+
+
+
+        function renderizarHistoricoPorDatas() {
+
+            const container = document.getElementById('container-datas');
+
+            container.innerHTML = '';
+
+            [...new Set(movimentacoes.map(m => m.data))].forEach(data => {
+
+                const itens = movimentacoes.filter(m => m.data === data);
+
+                container.innerHTML += `<div class="dia-grupo"><div class="dia-header" onclick="this.parentElement.classList.toggle('aberto')">📅 ${data} (${itens.length} itens)</div><div class="dia-conteudo"><table><thead><tr><th>Hora</th><th>Qtd</th><th>Material</th><th>Origem</th><th>Responsável</th><th>Destino</th><th>Status</th></tr></thead><tbody id="corpo-${data.replace(/\//g, '')}"></tbody></table></div></div>`;
+
+                const corpo = document.getElementById(`corpo-${data.replace(/\//g, '')}`);
+
+                itens.forEach(m => corpo.innerHTML += `<tr><td>${m.hora}</td><td>${m.qtd}</td><td>${m.material}</td><td>${m.origem || '-'}</td><td>${m.responsavel || '-'}</td><td>${m.destino || '-'}</td><td><span class="badge badge-${m.status}">${m.status}</span></td></tr>`);
+
+            });
+
+        }
+
+
+
+        function adicionarPedido() {
+
+            const mat = document.getElementById('novo-pedido').value;
+
+            if(mat) {
+
+                listaPedidos.push(mat);
+
+                localStorage.setItem('mpe_lista_pedidos', JSON.stringify(listaPedidos));
+
+                document.getElementById('novo-pedido').value = '';
+
+                renderizarListaPedidos();
+
+            }
+
+        }
+
+
+
+        function renderizarListaPedidos() {
+
+            const ul = document.getElementById('lista-pedidos');
+
+            ul.innerHTML = '';
+
+            listaPedidos.forEach((item, index) => {
+
+                ul.innerHTML += `<li style="padding: 8px; border-bottom: 1px solid #eee;">${item} <button onclick="removerPedido(${index})" style="width: auto; background: #ef4444; padding: 2px 8px; font-size: 11px;">Excluir</button></li>`;
+
+            });
+
+        }
+
+
+
+        function removerPedido(index) {
+
+            listaPedidos.splice(index, 1);
+
+            localStorage.setItem('mpe_lista_pedidos', JSON.stringify(listaPedidos));
+
+            renderizarListaPedidos();
+
+        }
+
+
+
         renderizarColaboradores();
+
+        renderizarOcorrencias();
+
         ajustarCamposPorTipo();
+
         atualizarPaineis();
+
     </script>
+
 </body>
+
 </html>
