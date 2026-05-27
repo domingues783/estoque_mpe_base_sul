@@ -29,38 +29,33 @@
 
         .grid-operacional { display: grid; grid-template-columns: 1fr 1.2fr; gap: 25px; }
         .box { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 25px; }
-        .box h2 { font-size: 18px; margin-bottom: 20px; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
+        .box h2 { font-size: 18px; margin-bottom: 20px; color: #0f172a; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
         
         .form-group { margin-bottom: 18px; }
         .form-group label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 600; color: #334155; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 11px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background-color: #f8fafc; }
+        .form-group input, .form-group select { width: 100%; padding: 11px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background-color: #f8fafc; }
         
         button { width: 100%; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         button:hover { background: #1d4ed8; }
         
-        .btn-edit { background: #64748b; padding: 2px 8px; font-size: 11px; margin-right: 4px; border: none; color: white; border-radius: 4px; cursor: pointer; }
-        .btn-del { background: #ef4444; padding: 2px 8px; font-size: 11px; border: none; color: white; border-radius: 4px; cursor: pointer; }
+        .btn-edit { background: #64748b; padding: 2px 8px; font-size: 11px; margin-right: 4px; }
+        .btn-del { background: #ef4444; padding: 2px 8px; font-size: 11px; }
         .btn-print { background: #0f172a; margin-bottom: 20px; }
 
-        /* Ajustes da tabela para esquadro (FIXO) */
-        .container-scroll { max-height: 400px; overflow-y: auto; display: block; border: 1px solid #e2e8f0; border-radius: 6px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 0; font-size: 14px; table-layout: fixed; }
-        th { background-color: #f8fafc; color: #64748b; padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 10; }
-        td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; }
+        th { background-color: #f8fafc; color: #64748b; }
         
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
         .badge-Entrada { background: #dcfce7; color: #16a34a; }
         .badge-Usado { background: #fee2e2; color: #ef4444; }
         .badge-Devolvido { background: #e0f2fe; color: #0284c7; }
-        .badge-EmUso { background: #fef3c7; color: #d97706; }
-        .badge-NaoDevolvido { background: #fae8ff; color: #c026d3; }
         .badge-NaoAplica { background: #f1f5f9; color: #475569; }
 
-        @media print {
-            .sidebar, header, .btn-print, button, .form-group, .dashboard-cards, .box { display: none !important; }
-            body { background: white; }
-            .main-content { margin: 0; padding: 0; width: 100%; }
-        }
+        .dia-grupo { margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: white; }
+        .dia-header { background: #e2e8f0; padding: 15px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: #1e293b; }
+        .dia-conteudo { display: none; padding: 15px; border-top: 1px solid #cbd5e1; }
+        .dia-grupo.aberto .dia-conteudo { display: block; }
     </style>
 </head>
 <body>
@@ -70,11 +65,7 @@
         <p>Estoque Base Sul</p>
         <menu>
             <li id="menu-movimentar" class="active" onclick="mudarTela('movimentar')">📤 Lançar Movimentação</li>
-            <li id="menu-recebimento" onclick="mudarTela('recebimento')">📥 Recebimento de Materiais</li>
-            <li id="menu-pedidos" onclick="mudarTela('pedidos')">📝 Lista de Pedidos</li>
             <li id="menu-registros" onclick="mudarTela('registros')">📋 Lançamentos Registrados</li>
-            <li id="menu-inventario" onclick="mudarTela('inventario')">📦 Inventário de Estoque</li>
-            <li id="menu-ocorrencias" onclick="mudarTela('ocorrencias')">⚠️ Ocorrências</li>
             <li id="menu-base-sul" onclick="mudarTela('base-sul')">👥 Colaboradores Base Sul</li>
         </menu>
     </div>
@@ -90,17 +81,21 @@
                 <div class="card"><h3>Movimentações Gerais</h3><p id="card-total">0</p></div>
                 <div class="card" style="border-left-color: #10b981;"><h3>Entradas no Estoque</h3><p id="card-entradas">0</p></div>
             </div>
+
             <div class="grid-operacional">
                 <div class="box">
                     <h2>Registrar Entrada ou Saída</h2>
                     <form id="form-movimentacao">
-                        <div class="form-group"><label>Tipo de Operação</label>
+                        <div class="form-group">
+                            <label>Tipo de Operação</label>
                             <select id="txt-tipo" onchange="ajustarCamposPorTipo()" required>
                                 <option value="Saída">Saída (Retirada de Material)</option>
                                 <option value="Entrada">Entrada (Abastecimento de Estoque)</option>
                             </select>
                         </div>
-                        <div class="form-group"><label>Material / Produto</label><input type="text" id="txt-material" required></div>
+                        <div class="form-group"><label>Material / Produto</label>
+                            <input type="text" id="txt-material" placeholder="Digite o nome do produto" required>
+                        </div>
                         <div class="form-group"><label>Quantidade</label><input type="number" id="txt-qtd" min="1" required></div>
                         <div class="form-group" id="grupo-responsavel"><label>Responsável</label><select id="txt-resp"></select></div>
                         <div class="form-group" id="grupo-destino"><label>Destino</label>
@@ -129,7 +124,6 @@
                                 <option value="Pq. Herculano">Pq. Herculano</option>
                                 <option value="Pq. Nove de Julho">Pq. Nove de Julho</option>
                                 <option value="UBS">UBS</option>
-                                <option value="Base Leopoldina">Base Leopoldina</option>
                                 <option value="Pq. Castelo">Pq. Castelo</option>
                                 <option value="Pq. Horizonte Sul">Pq. Horizonte Sul</option>
                                 <option value="Pq. Santo Dias">Pq. Santo Dias</option>
@@ -142,106 +136,183 @@
                             <select id="txt-status">
                                 <option value="Usado">Usado</option>
                                 <option value="Devolvido">Devolvido</option>
-                                <option value="EmUso">Em uso</option>
-                                <option value="NaoDevolvido">Não devolvido</option>
                                 <option value="NaoAplica">Não se aplica</option>
                             </select>
                         </div>
                         <button type="submit">Confirmar Baixa no Estoque</button>
                     </form>
                 </div>
+
                 <div class="box">
                     <h2>Últimos Lançamentos</h2>
-                    <div class="container-scroll">
-                        <table>
-                            <thead><tr><th style="width: 15%;">Hora</th><th style="width: 15%;">Tipo</th><th style="width: 30%;">Material</th><th style="width: 20%;">Status</th><th style="width: 20%;">Ações</th></tr></thead>
-                            <tbody id="tabela-rapida"></tbody>
-                        </table>
-                    </div>
+                    <table>
+                        <thead><tr><th>Hora</th><th>Tipo</th><th>Material</th><th>Status</th><th>Ações</th></tr></thead>
+                        <tbody id="tabela-rapida"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <div id="tela-recebimento" class="tela"><div class="box"><h2>Recebimento de Materiais</h2><form id="form-recebimento"><div class="form-group"><label>Categoria</label><select id="rec-cat" required><option value="Hidráulica">Hidráulica</option><option value="Elétrica">Elétrica</option><option value="Serralheria">Serralheria</option><option value="Marcenaria">Marcenaria</option><option value="Construção Civil">Construção Civil</option><option value="Pintura">Pintura</option><option value="Geral">Geral</option></select></div><div class="form-group"><label>Nome do Material</label><input type="text" id="rec-mat" required></div><div class="form-group"><label>Origem do Material</label><input type="text" id="rec-origem" placeholder="Ex: Fornecedor, Obra, etc..." required></div><div class="form-group"><label>Quantidade</label><input type="number" id="rec-qtd" min="1" required></div><button type="submit" style="background: #059669;">Registrar Entrada no Estoque</button></form></div></div>
-        <div id="tela-pedidos" class="tela"><div class="box"><h2>Lista de Pedidos</h2><div style="display: flex; gap: 10px; margin-bottom: 20px;"><input type="text" id="novo-pedido" placeholder="Nome do Material..." style="padding: 8px; flex: 1; border: 1px solid #cbd5e1; border-radius: 6px;"><button onclick="adicionarPedido()" style="width: auto; background: #059669;">Adicionar</button></div><button class="btn-print" onclick="window.print()" style="width: auto;">🖨️ Imprimir Lista</button><ul id="lista-pedidos" style="list-style: none; margin-top: 10px;"></ul></div></div>
-        <div id="tela-registros" class="tela"><div class="box"><h2>Histórico Consolidado</h2><div style="display: flex; gap: 10px; margin-bottom: 20px;"><button class="btn-print" onclick="window.print()" style="width: auto;">🖨️ Imprimir</button><button onclick="exportarParaCSV()" style="width: auto; background: #059669;">📊 Exportar para Excel</button></div><div class="form-group"><input type="text" id="filtro-busca" placeholder="🔍 Buscar..." onkeyup="filtrarRegistros()"></div><div id="container-datas"></div></div></div>
-        <div id="tela-inventario" class="tela"><div class="box"><h2>Saldo Atual de Estoque</h2><table><thead><tr><th>Material</th><th>Saldo Atual</th><th>Status</th></tr></thead><tbody id="corpo-tabela-inventario"></tbody></table></div></div>
-        <div id="tela-ocorrencias" class="tela"><div class="box"><h2>Ocorrências</h2><div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px;"><div class="form-group"><label>Colaborador</label><select id="oc-resp"></select></div><div class="form-group"><label>Material</label><input type="text" id="oc-mat"></div><div class="form-group"><label>Descrição</label><textarea id="oc-desc"></textarea></div><button onclick="adicionarOcorrencia()" style="background: #d97706;">Registrar Ocorrência</button></div><table><thead><tr><th>Data</th><th>Resp</th><th>Material</th><th>Ações</th></tr></thead><tbody id="corpo-tabela-ocorrencias"></tbody></table></div></div>
-        <div id="tela-base-sul" class="tela"><div class="box"><h2>Colaboradores</h2><div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px;"><div style="display: flex; gap: 10px;"><input type="text" id="novo-nome" placeholder="Nome"><input type="text" id="novo-funcao" placeholder="Função"><button onclick="adicionarColaborador()" style="width: auto;">+ Adicionar</button></div></div><table><thead><tr><th>Nome</th><th>Função</th><th>Ações</th></tr></thead><tbody id="corpo-tabela-colaboradores"></tbody></table></div></div>
+        <div id="tela-registros" class="tela">
+            <div class="box">
+                <h2>Histórico Consolidado</h2>
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button class="btn-print" onclick="window.print()">🖨️ Imprimir</button>
+                    <button onclick="exportarParaCSV()" style="background: #059669;">📊 Exportar para Excel</button>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="filtro-busca" placeholder="🔍 Buscar por material, responsável, destino ou data..." onkeyup="filtrarRegistros()">
+                </div>
+                <div id="container-datas"></div>
+            </div>
+        </div>
+
+        <div id="tela-base-sul" class="tela">
+            <div class="box">
+                <h2>Colaboradores - Base Sul</h2>
+                <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="novo-nome" placeholder="Nome">
+                        <input type="text" id="novo-funcao" placeholder="Função">
+                        <input type="text" id="novo-matricula" placeholder="Matrícula">
+                        <input type="text" id="novo-admissao" placeholder="Admissão">
+                        <button onclick="adicionarColaborador()">+ Adicionar</button>
+                    </div>
+                </div>
+                <table>
+                    <thead><tr><th>Nome</th><th>Função</th><th>Matrícula</th><th>Admissão</th></tr></thead>
+                    <tbody id="corpo-tabela-colaboradores"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <script>
         let movimentacoes = JSON.parse(localStorage.getItem('mpe_movimentacoes_v2')) || [];
-        let colaboradores = JSON.parse(localStorage.getItem('mpe_colaboradores')) || [];
+        let colaboradores = JSON.parse(localStorage.getItem('mpe_colaboradores')) || [
+            { nome: "Adão Custodio da Cruz", funcao: "Encarregado", matricula: "010787", admissao: "10/07/2006" },
+            { nome: "Alcides dos Santos Oliveira", funcao: "Eletricista", matricula: "010789", admissao: "14/02/2011" }
+        ];
 
         function mudarTela(nomeTela) {
             document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
             document.querySelectorAll('.sidebar menu li').forEach(l => l.classList.remove('active'));
             document.getElementById(`tela-${nomeTela}`).classList.add('ativa');
             document.getElementById(`menu-${nomeTela}`).classList.add('active');
+            if (nomeTela === 'registros') renderizarHistoricoPorDatas();
+        }
+
+        function filtrarRegistros() {
+            const termo = document.getElementById('filtro-busca').value.toLowerCase();
+            document.querySelectorAll('.dia-grupo').forEach(grupo => {
+                grupo.style.display = grupo.innerText.toLowerCase().includes(termo) ? "" : "none";
+            });
+        }
+
+        function exportarParaCSV() {
+            if (movimentacoes.length === 0) { alert("Não há dados para exportar!"); return; }
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFFData,Hora,Tipo,Material,Quantidade,Responsável,Destino,Status\n";
+            movimentacoes.forEach(m => {
+                csvContent += `${m.data},${m.hora},${m.tipo},${m.material},${m.qtd},"${m.responsavel || ''}","${m.destino || ''}",${m.status}\n`;
+            });
+            const link = document.createElement("a");
+            link.setAttribute("href", encodeURI(csvContent));
+            link.setAttribute("download", "Relatorio_Estoque_Base_Sul.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function ajustarCamposPorTipo() {
+            const display = document.getElementById('txt-tipo').value === 'Entrada' ? 'none' : 'block';
+            document.getElementById('grupo-responsavel').style.display = display;
+            document.getElementById('grupo-destino').style.display = display;
+            document.getElementById('grupo-status').style.display = display;
         }
 
         function atualizarPaineis() {
             document.getElementById('card-total').innerText = movimentacoes.length;
             document.getElementById('card-entradas').innerText = movimentacoes.filter(m => m.tipo === 'Entrada').length;
-            const tb = document.getElementById('tabela-rapida');
-            tb.innerHTML = '';
-            movimentacoes.forEach((m, i) => {
-                tb.innerHTML += `<tr><td>${m.hora}</td><td>${m.tipo}</td><td title="${m.material}">${m.material}</td><td><span class="badge badge-${m.status}">${m.status}</span></td><td><button class="btn-edit" onclick="editarStatus(${i})">Edit</button><button class="btn-del" onclick="excluirLancamento(${i})">X</button></td></tr>`;
+            const tabelaRapida = document.getElementById('tabela-rapida');
+            tabelaRapida.innerHTML = '';
+            movimentacoes.slice(0, 8).forEach((m, index) => {
+                tabelaRapida.innerHTML += `<tr><td>${m.hora}</td><td>${m.tipo}</td><td>${m.material}</td><td><span class="badge badge-${m.status}">${m.status}</span></td><td><button class="btn-edit" onclick="editarStatus(${index})">Editar</button><button class="btn-del" onclick="excluirLancamento(${index})">Excluir</button></td></tr>`;
             });
         }
 
         function renderizarColaboradores() {
             const corpo = document.getElementById('corpo-tabela-colaboradores');
-            const selectResp = document.getElementById('txt-resp');
-            const selectOc = document.getElementById('oc-resp');
+            const select = document.getElementById('txt-resp');
             corpo.innerHTML = '';
-            selectResp.innerHTML = '<option value="">Selecione...</option>';
-            selectOc.innerHTML = '<option value="">Selecione...</option>';
-            colaboradores.forEach((c, i) => {
-                corpo.innerHTML += `<tr><td>${c.nome}</td><td>${c.funcao}</td><td><button class="btn-del" onclick="excluirColaborador(${i})">X</button></td></tr>`;
-                selectResp.innerHTML += `<option value="${c.nome}">${c.nome}</option>`;
-                selectOc.innerHTML += `<option value="${c.nome}">${c.nome}</option>`;
+            select.innerHTML = '';
+            colaboradores.forEach(c => {
+                corpo.innerHTML += `<tr><td>${c.nome}</td><td>${c.funcao}</td><td>${c.matricula}</td><td>${c.admissao}</td></tr>`;
+                select.innerHTML += `<option value="${c.nome} - ${c.funcao}">${c.nome} - ${c.funcao}</option>`;
             });
         }
 
         function adicionarColaborador() {
             const nome = document.getElementById('novo-nome').value;
             const funcao = document.getElementById('novo-funcao').value;
+            const matricula = document.getElementById('novo-matricula').value;
+            const admissao = document.getElementById('novo-admissao').value;
             if(nome && funcao) {
-                colaboradores.push({nome, funcao});
+                colaboradores.push({ nome, funcao, matricula, admissao });
                 localStorage.setItem('mpe_colaboradores', JSON.stringify(colaboradores));
                 renderizarColaboradores();
             }
         }
 
-        function excluirColaborador(i) {
-            colaboradores.splice(i, 1);
-            localStorage.setItem('mpe_colaboradores', JSON.stringify(colaboradores));
-            renderizarColaboradores();
+        function editarStatus(index) {
+            const novo = prompt("Mudar para (Usado/Devolvido/NaoAplica):", movimentacoes[index].status);
+            if (novo && ['Usado', 'Devolvido', 'NaoAplica'].includes(novo)) {
+                movimentacoes[index].status = novo;
+                localStorage.setItem('mpe_movimentacoes_v2', JSON.stringify(movimentacoes));
+                atualizarPaineis();
+            }
+        }
+
+        function excluirLancamento(index) {
+            if (confirm("Tem certeza que deseja excluir este registro?")) {
+                movimentacoes.splice(index, 1);
+                localStorage.setItem('mpe_movimentacoes_v2', JSON.stringify(movimentacoes));
+                atualizarPaineis();
+            }
         }
 
         document.getElementById('form-movimentacao').addEventListener('submit', function(e) {
             e.preventDefault();
             const agora = new Date();
             movimentacoes.unshift({
+                data: agora.toLocaleDateString('pt-BR'),
                 hora: agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
                 tipo: document.getElementById('txt-tipo').value,
                 material: document.getElementById('txt-material').value,
+                qtd: document.getElementById('txt-qtd').value,
+                responsavel: document.getElementById('txt-resp').value,
+                destino: document.getElementById('txt-destino').value,
                 status: document.getElementById('txt-tipo').value === 'Entrada' ? 'Entrada' : document.getElementById('txt-status').value
             });
             localStorage.setItem('mpe_movimentacoes_v2', JSON.stringify(movimentacoes));
             this.reset();
+            ajustarCamposPorTipo();
             atualizarPaineis();
         });
 
-        function excluirLancamento(i) { movimentacoes.splice(i,1); localStorage.setItem('mpe_movimentacoes_v2', JSON.stringify(movimentacoes)); atualizarPaineis(); }
-        function editarStatus(i) { const n = prompt("Novo status:", movimentacoes[i].status); if(n) { movimentacoes[i].status = n; localStorage.setItem('mpe_movimentacoes_v2', JSON.stringify(movimentacoes)); atualizarPaineis(); } }
-        function ajustarCamposPorTipo() { const display = document.getElementById('txt-tipo').value === 'Entrada' ? 'none' : 'block'; document.getElementById('grupo-responsavel').style.display = display; document.getElementById('grupo-destino').style.display = display; document.getElementById('grupo-status').style.display = display; }
-        
-        atualizarPaineis();
+        function renderizarHistoricoPorDatas() {
+            const container = document.getElementById('container-datas');
+            container.innerHTML = '';
+            [...new Set(movimentacoes.map(m => m.data))].forEach(data => {
+                const itens = movimentacoes.filter(m => m.data === data);
+                container.innerHTML += `<div class="dia-grupo"><div class="dia-header" onclick="this.parentElement.classList.toggle('aberto')">📅 ${data} (${itens.length} itens)</div><div class="dia-conteudo"><table><thead><tr><th>Hora</th><th>Qtd</th><th>Material</th><th>Responsável</th><th>Destino</th><th>Status</th></tr></thead><tbody id="corpo-${data.replace(/\//g, '')}"></tbody></table></div></div>`;
+                const corpo = document.getElementById(`corpo-${data.replace(/\//g, '')}`);
+                itens.forEach(m => corpo.innerHTML += `<tr><td>${m.hora}</td><td>${m.qtd}</td><td>${m.material}</td><td>${m.responsavel || '-'}</td><td>${m.destino || '-'}</td><td><span class="badge badge-${m.status}">${m.status}</span></td></tr>`);
+            });
+        }
+
         renderizarColaboradores();
         ajustarCamposPorTipo();
+        atualizarPaineis();
     </script>
 </body>
 </html>
