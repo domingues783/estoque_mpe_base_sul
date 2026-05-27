@@ -104,7 +104,6 @@
 
     <div id="sistema">
         <div class="sidebar">
-            <img src="URL_DA_SUA_IMAGEM_AQUI" alt="Logo MPE" style="width: 150px; display: block; margin: 0 auto 15px;">
             <h2>MPE Engenharia</h2>
             <p>Estoque Base Sul</p>
             <menu>
@@ -306,7 +305,7 @@
         function enviarCodigo() {
             const email = document.getElementById('cad-email').value;
             if(!email.endsWith('@mpeengenharia.com.br')){ alert("Domínio @mpeengenharia.com.br obrigatório"); return; }
-            let codigoSimulado = "1234"; 
+            let codigoSimulado = Math.floor(1000 + Math.random() * 9000).toString();
             alert("Código de verificação enviado: " + codigoSimulado);
             if(prompt("Digite o código recebido:") === codigoSimulado){
                 localStorage.setItem('mpe_usuario_atual', email);
@@ -329,6 +328,7 @@
 
         if(usuarioLogado) { document.body.classList.add('logado'); }
 
+        // --- DADOS DINÂMICOS POR USUÁRIO ---
         function getDB(chave) { return JSON.parse(localStorage.getItem(`${usuarioLogado}_${chave}`)) || []; }
         function setDB(chave, valor) { localStorage.setItem(`${usuarioLogado}_${chave}`, JSON.stringify(valor)); }
 
@@ -346,7 +346,6 @@
             if (nomeTela === 'inventario') renderizarInventario();
             if (nomeTela === 'pedidos') renderizarListaPedidos();
             if (nomeTela === 'ocorrencias') renderizarOcorrencias();
-            if (nomeTela === 'base-sul') renderizarColaboradores();
         }
 
         document.getElementById('form-recebimento').addEventListener('submit', function(e) {
@@ -475,7 +474,6 @@
                 colaboradores.push({ nome, funcao: document.getElementById('novo-funcao').value, matricula: document.getElementById('novo-matricula').value, admissao: document.getElementById('novo-admissao').value });
                 setDB('colaboradores', colaboradores);
                 renderizarColaboradores();
-                document.getElementById('novo-nome').value = '';
             }
         }
 
@@ -538,13 +536,21 @@
             const ul = document.getElementById('lista-pedidos');
             ul.innerHTML = '';
             listaPedidos.forEach((item, index) => {
-                ul.innerHTML += `<li style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between;">${item} <button class="btn-del" onclick="listaPedidos.splice(${index},1); setDB('pedidos', listaPedidos); renderizarListaPedidos()">X</button></li>`;
+                ul.innerHTML += `<li style="padding: 8px; border-bottom: 1px solid #eee;">${item} <button onclick="removerPedido(${index})" style="width: auto; background: #ef4444; padding: 2px 8px; font-size: 11px;">Excluir</button></li>`;
             });
         }
 
-        if(usuarioLogado) {
-            atualizarPaineis();
+        function removerPedido(index) {
+            listaPedidos.splice(index, 1);
+            setDB('pedidos', listaPedidos);
+            renderizarListaPedidos();
+        }
+
+        if(usuarioLogado){
             renderizarColaboradores();
+            renderizarOcorrencias();
+            ajustarCamposPorTipo();
+            atualizarPaineis();
         }
     </script>
 </body>
