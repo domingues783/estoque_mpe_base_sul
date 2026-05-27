@@ -358,7 +358,8 @@
             document.getElementById('card-entradas').innerText = movimentacoes.filter(m => m.tipo === 'Entrada').length;
             const tabelaRapida = document.getElementById('tabela-rapida');
             tabelaRapida.innerHTML = '';
-            movimentacoes.slice(0, 8).forEach((m, index) => {
+            // Modificação: Removido .slice(0, 8) para exibir todos os registros
+            movimentacoes.forEach((m, index) => {
                 tabelaRapida.innerHTML += `<tr><td>${m.hora}</td><td>${m.tipo}</td><td>${m.material}</td><td><span class="badge badge-${m.status}">${m.status}</span></td><td><button class="btn-edit" onclick="editarStatus(${index})">Editar</button><button class="btn-del" onclick="excluirLancamento(${index})">X</button></td></tr>`;
             });
         }
@@ -390,7 +391,6 @@
             let saldos = {};
             movimentacoes.forEach(m => {
                 let qtd = parseInt(m.qtd) || 0;
-                // Remove [Categoria] para padronizar o nome
                 let nome = m.material.replace(/\[.*?\]\s*/, '').trim(); 
                 if (!saldos[nome]) saldos[nome] = 0;
                 m.tipo === 'Entrada' ? saldos[nome] += qtd : saldos[nome] -= qtd;
@@ -432,7 +432,6 @@
                 data: agora.toLocaleDateString('pt-BR'),
                 hora: agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
                 tipo: document.getElementById('txt-tipo').value,
-                // Remove [Categoria] antes de salvar
                 material: document.getElementById('txt-material').value.replace(/\[.*?\]\s*/, '').trim(),
                 qtd: document.getElementById('txt-qtd').value,
                 responsavel: document.getElementById('txt-resp').value,
