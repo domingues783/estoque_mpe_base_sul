@@ -42,13 +42,12 @@
         .btn-del { background: #ef4444; padding: 2px 8px; font-size: 11px; border: none; color: white; border-radius: 4px; cursor: pointer; }
         .btn-print { background: #0f172a; margin-bottom: 20px; }
 
-        /* Ajustes da tabela para esquadro */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; table-layout: fixed; }
-        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-        th { background-color: #f8fafc; color: #64748b; }
-        
+        /* Ajustes da tabela para esquadro (FIXO) */
         .container-scroll { max-height: 400px; overflow-y: auto; display: block; border: 1px solid #e2e8f0; border-radius: 6px; }
-
+        table { width: 100%; border-collapse: collapse; margin-top: 0; font-size: 14px; table-layout: fixed; }
+        th { background-color: #f8fafc; color: #64748b; padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 10; }
+        td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+        
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
         .badge-Entrada { background: #dcfce7; color: #16a34a; }
         .badge-Usado { background: #fee2e2; color: #ef4444; }
@@ -56,13 +55,6 @@
         .badge-EmUso { background: #fef3c7; color: #d97706; }
         .badge-NaoDevolvido { background: #fae8ff; color: #c026d3; }
         .badge-NaoAplica { background: #f1f5f9; color: #475569; }
-
-        .dia-grupo { margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; background: white; }
-        .dia-header { background: #e2e8f0; padding: 15px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: #1e293b; }
-        .dia-conteudo { display: none; padding: 15px; border-top: 1px solid #cbd5e1; }
-        .dia-grupo.aberto .dia-conteudo { display: block; }
-        .repor-true { color: #dc2626; font-weight: bold; }
-        .repor-false { color: #16a34a; }
 
         @media print {
             .sidebar, header, .btn-print, button, .form-group, .dashboard-cards, .box { display: none !important; }
@@ -181,17 +173,12 @@
     <script>
         let movimentacoes = JSON.parse(localStorage.getItem('mpe_movimentacoes_v2')) || [];
         let colaboradores = JSON.parse(localStorage.getItem('mpe_colaboradores')) || [];
-        let listaPedidos = JSON.parse(localStorage.getItem('mpe_lista_pedidos')) || [];
-        let ocorrencias = JSON.parse(localStorage.getItem('mpe_ocorrencias')) || [];
 
         function mudarTela(nomeTela) {
             document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
             document.querySelectorAll('.sidebar menu li').forEach(l => l.classList.remove('active'));
             document.getElementById(`tela-${nomeTela}`).classList.add('ativa');
             document.getElementById(`menu-${nomeTela}`).classList.add('active');
-            if(nomeTela === 'registros') renderizarHistoricoPorDatas();
-            if(nomeTela === 'inventario') renderizarInventario();
-            if(nomeTela === 'ocorrencias') renderizarOcorrencias();
         }
 
         function atualizarPaineis() {
@@ -204,15 +191,43 @@
             });
         }
 
+        function renderizarColaboradores() {
+            const corpo = document.getElementById('corpo-tabela-colaboradores');
+            const selectResp = document.getElementById('txt-resp');
+            const selectOc = document.getElementById('oc-resp');
+            corpo.innerHTML = '';
+            selectResp.innerHTML = '<option value="">Selecione...</option>';
+            selectOc.innerHTML = '<option value="">Selecione...</option>';
+            colaboradores.forEach((c, i) => {
+                corpo.innerHTML += `<tr><td>${c.nome}</td><td>${c.funcao}</td><td><button class="btn-del" onclick="excluirColaborador(${i})">X</button></td></tr>`;
+                selectResp.innerHTML += `<option value="${c.nome}">${c.nome}</option>`;
+                selectOc.innerHTML += `<option value="${c.nome}">${c.nome}</option>`;
+            });
+        }
+
+        function adicionarColaborador() {
+            const nome = document.getElementById('novo-nome').value;
+            const funcao = document.getElementById('novo-funcao').value;
+            if(nome && funcao) {
+                colaboradores.push({nome, funcao});
+                localStorage.setItem('mpe_colaboradores', JSON.stringify(colaboradores));
+                renderizarColaboradores();
+            }
+        }
+
+        function excluirColaborador(i) {
+            colaboradores.splice(i, 1);
+            localStorage.setItem('mpe_colaboradores', JSON.stringify(colaboradores));
+            renderizarColaboradores();
+        }
+
         document.getElementById('form-movimentacao').addEventListener('submit', function(e) {
             e.preventDefault();
             const agora = new Date();
             movimentacoes.unshift({
-                data: agora.toLocaleDateString('pt-BR'),
                 hora: agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}),
                 tipo: document.getElementById('txt-tipo').value,
                 material: document.getElementById('txt-material').value,
-                qtd: document.getElementById('txt-qtd').value,
                 status: document.getElementById('txt-tipo').value === 'Entrada' ? 'Entrada' : document.getElementById('txt-status').value
             });
             localStorage.setItem('mpe_movimentacoes_v2', JSON.stringify(movimentacoes));
@@ -220,13 +235,13 @@
             atualizarPaineis();
         });
 
-        // Funções de suporte básicas
         function excluirLancamento(i) { movimentacoes.splice(i,1); localStorage.setItem('mpe_movimentacoes_v2', JSON.stringify(movimentacoes)); atualizarPaineis(); }
         function editarStatus(i) { const n = prompt("Novo status:", movimentacoes[i].status); if(n) { movimentacoes[i].status = n; localStorage.setItem('mpe_movimentacoes_v2', JSON.stringify(movimentacoes)); atualizarPaineis(); } }
+        function ajustarCamposPorTipo() { const display = document.getElementById('txt-tipo').value === 'Entrada' ? 'none' : 'block'; document.getElementById('grupo-responsavel').style.display = display; document.getElementById('grupo-destino').style.display = display; document.getElementById('grupo-status').style.display = display; }
         
         atualizarPaineis();
+        renderizarColaboradores();
         ajustarCamposPorTipo();
-        function ajustarCamposPorTipo() { const display = document.getElementById('txt-tipo').value === 'Entrada' ? 'none' : 'block'; document.getElementById('grupo-responsavel').style.display = display; document.getElementById('grupo-destino').style.display = display; document.getElementById('grupo-status').style.display = display; }
     </script>
 </body>
 </html>
