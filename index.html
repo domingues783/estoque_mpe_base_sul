@@ -45,6 +45,10 @@
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
         th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; }
         th { background-color: #f8fafc; color: #64748b; }
+
+        /* Ajuste para barra de rolagem na tabela de últimos lançamentos */
+        #tabela-rapida { display: block; max-height: 400px; overflow-y: auto; }
+        #tabela-rapida tr { display: table; width: 100%; table-layout: fixed; }
         
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
         .badge-Entrada { background: #dcfce7; color: #16a34a; }
@@ -358,7 +362,6 @@
             document.getElementById('card-entradas').innerText = movimentacoes.filter(m => m.tipo === 'Entrada').length;
             const tabelaRapida = document.getElementById('tabela-rapida');
             tabelaRapida.innerHTML = '';
-            // Modificação: Removido .slice(0, 8) para exibir todos os registros
             movimentacoes.forEach((m, index) => {
                 tabelaRapida.innerHTML += `<tr><td>${m.hora}</td><td>${m.tipo}</td><td>${m.material}</td><td><span class="badge badge-${m.status}">${m.status}</span></td><td><button class="btn-edit" onclick="editarStatus(${index})">Editar</button><button class="btn-del" onclick="excluirLancamento(${index})">X</button></td></tr>`;
             });
